@@ -98,10 +98,14 @@ model Trip {
 
 model Location {
   id            String   @id @default(cuid())
-  locationTitle String
+  locationTitle String?
+  address       String
   latitude      Float
   longitude     Float
-  order         Int @default(0)
+  order         Int      @default(0)
+  startDate     DateTime
+  duration      String?
+  notes         String?
   tripId        String
 
   createdAt     DateTime @default(now())

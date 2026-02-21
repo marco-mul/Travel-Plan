@@ -25,15 +25,75 @@ export default function NewLocationClient({ tripId }: { tripId: string }) {
             <div>
               <label
                 className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                htmlFor=""
+                htmlFor="title"
+              >
+                Title
+              </label>
+              <input
+                id="title"
+                name="title"
+                type="text"
+                required
+                className="w-full border border-gray-300 dark:border-gray-600 px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-white-500 dark:bg-gray-700 dark:text-gray-300"
+              />
+            </div>
+            <div>
+              <label
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                htmlFor="address"
               >
                 Address
               </label>
               <input
+                id="address"
                 name="address"
                 type="text"
                 required
                 className="w-full border border-gray-300 dark:border-gray-600 px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-white-500 dark:bg-gray-700 dark:text-gray-300"
+              />
+            </div>
+            <div>
+              <label
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                htmlFor="startDate"
+              >
+                Start Date
+              </label>
+              <input
+                id="startDate"
+                name="startDate"
+                type="date"
+                required
+                className="w-full border border-gray-300 dark:border-gray-600 px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-white-500 dark:bg-gray-700 dark:text-gray-300"
+              />
+            </div>
+            <div>
+              <label
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                htmlFor="duration"
+              >
+                Duration
+              </label>
+              <input
+                id="duration"
+                name="duration"
+                type="text"
+                required
+                className="w-full border border-gray-300 dark:border-gray-600 px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-white-500 dark:bg-gray-700 dark:text-gray-300"
+              />
+            </div>
+            <div>
+              <label
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                htmlFor="notes"
+              >
+                Notes
+              </label>
+              <textarea
+                id="notes"
+                name="notes"
+                rows={4}
+                className="w-full border border-gray-300 dark:border-gray-600 px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-white-500 dark:bg-gray-700 dark:text-gray-300 resize-none"
               />
             </div>
             <Button type="submit" className="w-full">

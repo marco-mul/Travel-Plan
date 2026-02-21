@@ -6,7 +6,7 @@ import { Calendar, Delete, Loader, MapPin, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "./ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import Map from "./Map";
 import SortableItinerary from "./Sortable-itinerary";
 import { deleteTrip } from "@/lib/actions/delete-trip";
@@ -38,6 +38,11 @@ export default function TripDetailsClient({ trip }: TripDetailsClientProps) {
   const router = useRouter();
 
   const [activeTab, setActiveTab] = useState("overview");
+  const [locations, setLocations] = useState(trip.locations);
+
+  useEffect(() => {
+    setLocations(trip.locations);
+  }, [trip.locations]);
 
   const [isPending, startTransition] = useTransition();
 
@@ -192,7 +197,7 @@ export default function TripDetailsClient({ trip }: TripDetailsClientProps) {
                     </div>
                   </div>
                   <div className="h-102 rounded-lg overflow-hidden shadow">
-                    <Map itineraries={trip.locations} />
+                    <Map itineraries={locations} />
                   </div>
                 </div>
               </TabsContent>
@@ -214,15 +219,16 @@ export default function TripDetailsClient({ trip }: TripDetailsClientProps) {
                     </div>
                   ) : (
                     <SortableItinerary
-                      locations={trip.locations}
+                      locations={locations}
                       tripId={trip.id}
+                      onReorder={setLocations}
                     />
                   )}
                 </div>
               </TabsContent>
               <TabsContent value="map" className="space-y-6">
                 <div className="h-110 rounded-lg overflow-hidden shadow">
-                  <Map itineraries={trip.locations} />
+                  <Map itineraries={locations} />
                 </div>
                 {trip.locations.length === 0 && (
                   <div className="flex flex-col items-center text-center p-4">

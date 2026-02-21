@@ -23,10 +23,18 @@ export async function addLocation(formData: FormData, tripId: string) {
     throw new Error("Not authenticated");
   }
 
+  const title = formData.get("title")?.toString();
   const address = formData.get("address")?.toString();
+  const startDate = formData.get("startDate")?.toString();
+  const duration = formData.get("duration")?.toString();
+  const notes = formData.get("notes")?.toString();
 
   if (!address) {
     throw new Error("Address is required");
+  }
+
+  if (!startDate) {
+    throw new Error("Start date is required");
   }
 
   const { lat, lng } = await geoCodeAddress(address);
@@ -40,11 +48,15 @@ export async function addLocation(formData: FormData, tripId: string) {
 
   await prisma.location.create({
     data: {
-      locationTitle: address,
+      locationTitle: title,
+      address: address,
       latitude: lat,
       longitude: lng,
       tripId: tripId,
       order: count,
+      startDate: new Date(startDate),
+      duration: duration,
+      notes: notes || null,
     },
   });
 

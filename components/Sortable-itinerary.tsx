@@ -1,6 +1,14 @@
 import { Location } from "@/app/generated/prisma/client";
 import { reorderItinerary } from "@/lib/actions/reorder-itinerary";
-import { DndContext, closestCenter, DragEndEvent } from "@dnd-kit/core";
+import {
+  DndContext,
+  closestCenter,
+  DragEndEvent,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
 import {
   arrayMove,
   SortableContext,
@@ -8,44 +16,257 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useId, useState } from "react";
+import { useEffect, useId, useState, useTransition } from "react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
+import { Button } from "./ui/button";
+import {
+  Edit2,
+  GripVertical,
+  Loader,
+  MoreVertical,
+  Trash2,
+  View,
+} from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "./ui/dialog";
+import { editLocation } from "@/lib/actions/edit-location";
+import { useRouter } from "next/navigation";
 
 interface SortableItineraryProps {
   locations: Location[];
   tripId: string;
+  onReorder?: (locations: Location[]) => void;
 }
 
 function SortableItem({ item }: { item: Location }) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [isEditing, setIsEditing] = useState(false);
+  const [isViewing, setIsViewing] = useState(false);
+  const [formData, setFormData] = useState({
+    locationTitle: item.locationTitle ?? "",
+    address: item.address,
+    latitude: item.latitude,
+    longitude: item.longitude,
+    startDate: item.startDate.toISOString().split("T")[0],
+    duration: item.duration ?? "",
+    notes: item.notes ?? "",
+  });
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id: item.id });
+
+    async function handleUpdate(e: React.SubmitEvent) {
+        e.preventDefault();
+        try {
+          const result = await editLocation(item.id, {
+            ...formData,
+          });
+    
+          if (result.success) {
+            setIsEditing(false); // just close the dialog, no page reload
+            router.refresh()
+          }
+        } catch (error) {
+          console.error("Failed to update location: ", error);
+        }
+      }
+      
   return (
-    <div
-      ref={setNodeRef}
-      {...attributes}
-      {...listeners}
-      style={{ transform: CSS.Transform.toString(transform), transition }}
-      className="p-4 border rounded-md flex justify-between items-center hover:shadow transition-shadow"
-    >
-      <div>
-        <h4 className="font-medium text-gray-800">{item.locationTitle}</h4>
-        <p className="text-sm text-gray-400 truncate">{`Latitude: ${item.latitude}, Longitude: ${item.longitude}`}</p>
+    <>
+      <div
+        ref={setNodeRef}
+        {...attributes}
+        style={{ transform: CSS.Transform.toString(transform), transition }}
+        className="p-4 border rounded-md flex justify-between items-center hover:shadow transition-shadow"
+      >
+        <div
+          {...listeners}
+          // we add the listeners to the drag handle, in this case the GripVertical icon,
+          //so the event listeners doesn't interfere with the dropdown menu and the edit/view buttons
+          className="cursor-grab text-gray-400 hover:text-gray-600"
+        >
+          <GripVertical className="h-5 w-5" />
+        </div>
+        <div className="max-w-3/5">
+          <h4 className="font-medium text-gray-800 dark:text-gray-300">
+            {item.locationTitle}
+          </h4>
+          <p className="text-md text-gray-400 truncate">{`Date: ${new Date(item.startDate).toLocaleDateString()} Duration: ${item.duration}`}</p>
+          <p className="text-sm text-gray-400 truncate">{`Address: ${item.address}`}</p>
+          <p className="text-sm text-gray-400 truncate">{`Latitude: ${item.latitude}, Longitude: ${item.longitude}`}</p>
+          <p className="text-sm text-gray-400 truncate">{`Notes: ${item.notes}`}</p>
+        </div>
+        <div className="flex flex-col items-start gap-6">
+          <div className=" flex items-start gap-1">
+            <DropdownMenu>
+              <DropdownMenuTrigger>
+                <Button variant="ghost" size="icon" className="h-6 w-6">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setIsViewing(true)}>
+                  <View className="mr-2 h-4 w-4" />
+                  View
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setIsEditing(true)}>
+                  <Edit2 className="mr-2 h-4 w-4" />
+                  Edit
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                  className="text-destructive"
+                  //onClick={() => handleDelete()}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+          <div>Stop {`${item.order + 1}`}</div>
+        </div>
       </div>
-      <div>Stop {`${item.order + 1}`}</div>
-    </div>
+      {/* dialogue to edit the stop */}
+      <Dialog open={isEditing} onOpenChange={setIsEditing}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Update Stop</DialogTitle>
+            <DialogDescription>Make changes to your stop</DialogDescription>
+          </DialogHeader>
+          <form
+            className="space-y-6"
+            onSubmit={handleUpdate}
+          >
+            <div>
+              <label
+                className="block text-sm font-medium text-gray-700 mb-1"
+                htmlFor=""
+              >
+                Title
+              </label>
+              <input
+                type="text"
+                name="locationTitle"
+                value={formData.locationTitle}
+                onChange={(e) =>
+                  setFormData({ ...formData, locationTitle: e.target.value })
+                }
+                className={
+                  "w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                }
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                  htmlFor=""
+                >
+                  Date
+                </label>
+                <input
+                  type="date"
+                  name="startDate"
+                  className={
+                    "w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  }
+                  value={formData.startDate}
+                  onChange={(e) =>
+                    setFormData({ ...formData, startDate: e.target.value })
+                  }
+                />
+              </div>
+              <div>
+                <label
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                  htmlFor=""
+                >
+                  Duration
+                </label>
+                <input
+                  type="text"
+                  name="duration"
+                  className={
+                    "w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  }
+                  value={formData.duration}
+                  onChange={(e) =>
+                    setFormData({ ...formData, duration: e.target.value })
+                  }
+                />
+              </div>
+            </div>
+            <div>
+              <label
+                className="block text-sm font-medium text-gray-700 mb-1"
+                htmlFor=""
+              >
+                Notes
+              </label>
+              <textarea
+                name="notes"
+                value={formData.notes}
+                onChange={(e) =>
+                  setFormData({ ...formData, notes: e.target.value })
+                }
+                className={
+                  "w-full border border-gray-300 px-3 py-2rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                }
+              />
+            </div>
+
+            <Button type="submit" className="w-full" disabled={isPending}>
+              {isPending ? (
+                <>
+                  <Loader className="animate-spin mr-2 text-white" /> Editing
+                  Stop...
+                </>
+              ) : (
+                "Edit Stop"
+              )}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
 export default function SortableItinerary({
   locations,
   tripId,
+  onReorder,
 }: SortableItineraryProps) {
   //useId is a hook that generates a unique id for the component,
   // we can use it to create unique ids for the sortable items
   const id = useId();
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 250, tolerance: 5 },
+    }),
+  );
   //we want to keep track of the order of the locations in the state,
   // we set useState initial value to what we get from the DB
   //and in the sortable context we just want to get the IDs using the map function
   const [localLocations, setLocalLocations] = useState(locations);
+
+  useEffect(() => {
+    setLocalLocations(locations);
+  }, [locations]);
 
   const handleDragEnd = async (event: DragEndEvent) => {
     //we check if the item was dropped in a different location, if so we update the localLocations state
@@ -65,16 +286,18 @@ export default function SortableItinerary({
       ).map((item, index) => ({ ...item, order: index }));
       //if we didn't use map, we would see the items change place but not the order number,
       setLocalLocations(newLocationsOrder);
-        //we then send the new order to the server to update the DB
-        await reorderItinerary(
-            tripId,
-            newLocationsOrder.map((item) => item.id)
-        )
+      onReorder?.(newLocationsOrder);
+      //we then send the new order to the server to update the DB
+      await reorderItinerary(
+        tripId,
+        newLocationsOrder.map((item) => item.id),
+      );
     }
   };
   return (
     <DndContext
       id={id}
+      sensors={sensors}
       collisionDetection={closestCenter}
       onDragEnd={handleDragEnd}
     >

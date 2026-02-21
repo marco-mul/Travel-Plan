@@ -3,15 +3,13 @@
 import { auth } from "@/auth";
 import { prisma } from "../prisma";
 
-
-export async function editTrip(
+export async function editLocation(
   id: string,
   updates: {
-    title?: string;
-    description?: string;
-    imageUrl?: string;
+    locationTitle?: string;
+    notes?: string;
     startDate?: string;
-    endDate?: string;
+    duration?: string;
   },
 ) {
   const session = await auth();
@@ -20,16 +18,13 @@ export async function editTrip(
     throw new Error("Not authenticated");
   }
 
-  
-
-  const tripToEdit = await prisma.trip.update({
+  const locationToEdit = await prisma.location.update({
     where: { id },
     data: {
       ...updates,
       startDate: updates.startDate ? new Date(updates.startDate) : undefined,
-      endDate: updates.endDate ? new Date(updates.endDate) : undefined,
     },
   });
 
-  return { success: true }
+  return { success: true };
 }
