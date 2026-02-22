@@ -10,6 +10,10 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Tell Next.js to include the Prisma engine binary from the custom output path
+  outputFileTracingIncludes: {
+    "**/*": ["./app/generated/prisma/**/*"],
+  },
 };
 
 export default nextConfig;
