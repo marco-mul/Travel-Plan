@@ -36,11 +36,13 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "./ui/dialog";
 import { editLocation } from "@/lib/actions/edit-location";
 import { useRouter } from "next/navigation";
+import DeleteLocationButton from "./DeleteLocationButton";
 
 interface SortableItineraryProps {
   locations: Location[];
@@ -53,6 +55,7 @@ function SortableItem({ item }: { item: Location }) {
   const [isPending, startTransition] = useTransition();
   const [isEditing, setIsEditing] = useState(false);
   const [isViewing, setIsViewing] = useState(false);
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [formData, setFormData] = useState({
     locationTitle: item.locationTitle ?? "",
     address: item.address,
@@ -65,22 +68,24 @@ function SortableItem({ item }: { item: Location }) {
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id: item.id });
 
-    async function handleUpdate(e: React.SubmitEvent) {
-        e.preventDefault();
-        try {
-          const result = await editLocation(item.id, {
-            ...formData,
-          });
-    
-          if (result.success) {
-            setIsEditing(false); // just close the dialog, no page reload
-            router.refresh()
-          }
-        } catch (error) {
-          console.error("Failed to update location: ", error);
-        }
+ 
+
+  async function handleUpdate(e: React.SubmitEvent) {
+    e.preventDefault();
+    try {
+      const result = await editLocation(item.id, {
+        ...formData,
+      });
+
+      if (result.success) {
+        setIsEditing(false); // just close the dialog, no page reload
+        router.refresh();
       }
-      
+    } catch (error) {
+      console.error("Failed to update location: ", error);
+    }
+  }
+
   return (
     <>
       <div
@@ -97,7 +102,7 @@ function SortableItem({ item }: { item: Location }) {
         >
           <GripVertical className="h-5 w-5" />
         </div>
-        <div className="max-w-3/5">
+        <div className="w-7/10">
           <h4 className="font-medium text-gray-800 dark:text-gray-300">
             {item.locationTitle}
           </h4>
@@ -115,7 +120,15 @@ function SortableItem({ item }: { item: Location }) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setIsViewing(true)}>
+                {/* on the first item on the dropdown, which is automatically focused by Radix, 
+                we need to use onSelect instead of onClick to prevent the menu from closing
+                e.preventDefault() stops Radix from running its default close-and-focus-return sequence */}
+                <DropdownMenuItem
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    setIsViewing(true);
+                  }}
+                >
                   <View className="mr-2 h-4 w-4" />
                   View
                 </DropdownMenuItem>
@@ -126,7 +139,7 @@ function SortableItem({ item }: { item: Location }) {
 
                 <DropdownMenuItem
                   className="text-destructive"
-                  //onClick={() => handleDelete()}
+                  onSelect={() => setIsConfirmingDelete(true)}
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
                   Delete
@@ -137,6 +150,68 @@ function SortableItem({ item }: { item: Location }) {
           <div>Stop {`${item.order + 1}`}</div>
         </div>
       </div>
+
+      <DeleteLocationButton
+        stopId={item.id}
+        open={isConfirmingDelete}
+        onOpenChange={setIsConfirmingDelete}
+      />
+
+      {/* Dialog to view the stop details */}
+      <Dialog open={isViewing} onOpenChange={setIsViewing}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="font-bold text-3xl mb-4">
+              {item.locationTitle}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <p className="font-bold text-xl">Stop Name:</p>
+                  <p>{item.locationTitle}</p>
+                </div>
+                <div className="space-y-2">
+                  <p className="font-bold text-xl">Address: </p>
+                  <p>{item.address}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <p className="font-bold text-xl">Date:</p>
+                  <p>{new Date(item.startDate).toLocaleDateString()}</p>
+                </div>
+                <div className="space-y-2">
+                  <p className="font-bold text-xl">Duration:</p>
+                  <p>{item.duration}</p>
+                </div>
+                <div className="space-y-2">
+                  <p className="font-bold text-xl">Coordinates:</p>
+                  <p>{`Latitude: ${item.latitude}, Longitude: ${item.longitude}`}</p>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <p className="font-bold text-xl">Notes:</p>
+                <p>{item.notes}</p>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsViewing(false)}
+              >
+                Close
+              </Button>
+              <Button type="button" onClick={() => setIsEditing(true)}>
+                Edit
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* dialogue to edit the stop */}
       <Dialog open={isEditing} onOpenChange={setIsEditing}>
         <DialogContent className="max-w-2xl">
@@ -144,10 +219,7 @@ function SortableItem({ item }: { item: Location }) {
             <DialogTitle>Update Stop</DialogTitle>
             <DialogDescription>Make changes to your stop</DialogDescription>
           </DialogHeader>
-          <form
-            className="space-y-6"
-            onSubmit={handleUpdate}
-          >
+          <form className="space-y-6" onSubmit={handleUpdate}>
             <div>
               <label
                 className="block text-sm font-medium text-gray-700 mb-1"
