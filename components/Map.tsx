@@ -1,4 +1,4 @@
-import { Location } from "@/app/generated/prisma/client";
+import { Location } from "@prisma/client";
 import { GoogleMap, Marker, useLoadScript } from "@react-google-maps/api";
 
 interface MapProps {

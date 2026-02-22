@@ -1,4 +1,4 @@
-import { Location } from "@/app/generated/prisma/client";
+import { Location } from "@prisma/client";
 import { reorderItinerary } from "@/lib/actions/reorder-itinerary";
 import {
   DndContext,
