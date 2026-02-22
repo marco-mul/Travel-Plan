@@ -85,7 +85,7 @@ export default function TripDetailsClient({ trip }: TripDetailsClientProps) {
   return (
     <>
       <div className="min-h-screen bg-linear-to-b from-gray-50 to-gray-200 dark:from-black dark:to-gray-600">
-        <div className="container mx-auto px-4 py-8 space-y-8 mb-50">
+        <div className="container mx-auto px-4 py-8 space-y-8 pb-50">
           {trip.imageUrl && (
             <div className="w-full h-72 md:h-96 overflow-hidden rounded-xl shadow-lg relative mt-20">
               <Image
