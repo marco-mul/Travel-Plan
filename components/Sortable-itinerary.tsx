@@ -98,7 +98,9 @@ function SortableItem({ item }: { item: Location }) {
           {...listeners}
           // we add the listeners to the drag handle, in this case the GripVertical icon,
           //so the event listeners doesn't interfere with the dropdown menu and the edit/view buttons
+          // touch-action: none tells the browser not to scroll on touch, letting dnd-kit handle it
           className="cursor-grab text-gray-400 hover:text-gray-600"
+          style={{ touchAction: "none" }}
         >
           <GripVertical className="h-5 w-5" />
         </div>

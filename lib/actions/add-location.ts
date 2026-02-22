@@ -11,6 +11,11 @@ async function geoCodeAddress(address: string) {
   );
 
   const data = await response.json();
+
+  if (data.status !== "OK" || !data.results?.length) {
+    throw new Error(`Geocoding failed: ${data.status} - ${data.error_message ?? "no results"}`);
+  }
+
   const { lat, lng } = data.results[0].geometry.location;
 
   return { lat, lng };
