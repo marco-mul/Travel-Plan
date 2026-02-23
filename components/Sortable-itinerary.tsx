@@ -4,6 +4,8 @@ import {
   DndContext,
   closestCenter,
   DragEndEvent,
+  DragStartEvent,
+  DragOverlay,
   PointerSensor,
   TouchSensor,
   useSensor,
@@ -98,7 +100,7 @@ function SortableItem({ item }: { item: Location }) {
         style={{
           transform: CSS.Translate.toString(transform),
           transition,
-          opacity: isDragging ? 0.5 : 1,
+          opacity: isDragging ? 0 : 1,
         }}
         className="p-4 border rounded-md flex justify-between items-center hover:shadow transition-shadow"
       >
@@ -345,12 +347,19 @@ export default function SortableItinerary({
   // we set useState initial value to what we get from the DB
   //and in the sortable context we just want to get the IDs using the map function
   const [localLocations, setLocalLocations] = useState(locations);
+  const [activeItem, setActiveItem] = useState<Location | null>(null);
 
   useEffect(() => {
     setLocalLocations(locations);
   }, [locations]);
 
+  const handleDragStart = (event: DragStartEvent) => {
+    const item = localLocations.find((loc) => loc.id === event.active.id);
+    setActiveItem(item ?? null);
+  };
+
   const handleDragEnd = async (event: DragEndEvent) => {
+    setActiveItem(null);
     //we check if the item was dropped in a different location, if so we update the localLocations state
     //we'll then handle the actual update of the order in the DB in a server action
     const { active, over } = event;
@@ -381,6 +390,7 @@ export default function SortableItinerary({
       id={id}
       sensors={sensors}
       collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
       <SortableContext
@@ -388,11 +398,26 @@ export default function SortableItinerary({
         strategy={verticalListSortingStrategy}
       >
         <div className="space-y-4 w-full">
-          {localLocations.map((item, key) => (
-            <SortableItem key={key} item={item} />
+          {localLocations.map((item) => (
+            <SortableItem key={item.id} item={item} />
           ))}
         </div>
       </SortableContext>
+      <DragOverlay>
+        {activeItem ? (
+          <div className="p-4 border rounded-md flex justify-between items-center shadow-lg bg-card opacity-95">
+            <GripVertical className="h-5 w-5 text-gray-400" />
+            <div className="w-7/10">
+              <h4 className="font-medium text-gray-800 dark:text-gray-300">
+                {activeItem.locationTitle}
+              </h4>
+              <p className="text-md text-gray-400 truncate">{`Date: ${new Date(activeItem.startDate).toLocaleDateString()} Duration: ${activeItem.duration}`}</p>
+              <p className="text-sm text-gray-400 truncate">{`Address: ${activeItem.address}`}</p>
+            </div>
+            <div>Stop {`${activeItem.order + 1}`}</div>
+          </div>
+        ) : null}
+      </DragOverlay>
     </DndContext>
   );
 }
