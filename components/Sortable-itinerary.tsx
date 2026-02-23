@@ -65,10 +65,14 @@ function SortableItem({ item }: { item: Location }) {
     duration: item.duration ?? "",
     notes: item.notes ?? "",
   });
-  const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({ id: item.id });
-
- 
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: item.id });
 
   async function handleUpdate(e: React.SubmitEvent) {
     e.preventDefault();
@@ -91,7 +95,11 @@ function SortableItem({ item }: { item: Location }) {
       <div
         ref={setNodeRef}
         {...attributes}
-        style={{ transform: CSS.Transform.toString(transform), transition }}
+        style={{
+          transform: CSS.Translate.toString(transform),
+          transition,
+          opacity: isDragging ? 0.5 : 1,
+        }}
         className="p-4 border rounded-md flex justify-between items-center hover:shadow transition-shadow"
       >
         <div
