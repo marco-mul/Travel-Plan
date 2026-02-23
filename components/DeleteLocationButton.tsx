@@ -21,7 +21,11 @@ interface DeleteStopButtonProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export default function DeleteStopButton({ stopId, open, onOpenChange }: DeleteStopButtonProps) {
+export default function DeleteStopButton({
+  stopId,
+  open,
+  onOpenChange,
+}: DeleteStopButtonProps) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
@@ -49,10 +53,12 @@ export default function DeleteStopButton({ stopId, open, onOpenChange }: DeleteS
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel className="bg-gray-200 border pt-1 pb-1 pr-3 pl-3 rounded-xl text-gray-700 hover:cursor-pointer hover:bg-gray-300">
+            Cancel
+          </AlertDialogCancel>
           <AlertDialogAction
             onClick={handleDelete}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            className="bg-destructive border pt-1 pb-1 pr-3 pl-3 rounded-xl text-destructive-foreground hover:cursor-pointer hover:bg-destructive/90"
           >
             {isPending ? <Loader2 className="animate-spin" /> : "Delete"}
           </AlertDialogAction>

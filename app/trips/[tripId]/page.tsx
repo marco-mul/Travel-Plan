@@ -26,7 +26,7 @@ export default async function TripDetails({
       id: tripId,
       userId: session.user?.id,
     },
-    include: { locations: true },
+    include: { locations: { orderBy: { order: "asc" } } },
   });
 
   console.log(trip);

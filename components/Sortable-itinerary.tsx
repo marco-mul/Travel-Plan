@@ -120,8 +120,8 @@ function SortableItem({ item }: { item: Location }) {
           </h4>
           <p className="text-md text-gray-400 truncate">{`Date: ${new Date(item.startDate).toLocaleDateString()} Duration: ${item.duration}`}</p>
           <p className="text-sm text-gray-400 truncate">{`Address: ${item.address}`}</p>
-          <p className="text-sm text-gray-400 truncate">{`Latitude: ${item.latitude}, Longitude: ${item.longitude}`}</p>
-          <p className="text-sm text-gray-400 truncate">{`Notes: ${item.notes}`}</p>
+          
+          {item.notes && (<p className="text-sm text-gray-400 truncate">{`Notes: ${item.notes}`}</p>)}
         </div>
         <div className="flex flex-col items-start gap-6">
           <div className=" flex items-start gap-1">
@@ -198,17 +198,14 @@ function SortableItem({ item }: { item: Location }) {
                   <p className="font-bold text-xl">Duration:</p>
                   <p>{item.duration}</p>
                 </div>
-                <div className="space-y-2">
-                  <p className="font-bold text-xl">Coordinates:</p>
-                  <p>{`Latitude: ${item.latitude}, Longitude: ${item.longitude}`}</p>
-                </div>
+                
               </div>
               <div className="space-y-2">
                 <p className="font-bold text-xl">Notes:</p>
                 <p>{item.notes}</p>
               </div>
             </div>
-            <DialogFooter>
+            <DialogFooter className="pt-10">
               <Button
                 type="button"
                 variant="outline"

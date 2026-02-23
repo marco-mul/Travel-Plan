@@ -8,6 +8,7 @@ import { Button } from "./ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { useEffect, useState, useTransition } from "react";
 import Map from "./Map";
+import { UploadButton } from "@/lib/upload-thing";
 import SortableItinerary from "./Sortable-itinerary";
 import { deleteTrip } from "@/lib/actions/delete-trip";
 import DeleteTripButton from "./DeleteTripButton";
@@ -338,31 +339,31 @@ export default function TripDetailsClient({ trip }: TripDetailsClientProps) {
                 />
               </div>
             </div>
-            {/* <div>
-                        <label htmlFor="">Trip Image</label>
-                        {imageUrl && (
-                          <Image
-                            src={imageUrl}
-                            alt="Image Preview"
-                            className="w-full mb-4 rounded-md max-h-48 object-cover"
-                            width={300}
-                            height={100}
-                          />
-                        )}
-                        <UploadButton
-                          endpoint="imageUploader"
-                          //once upload complete, we save the url to state
-                          // so we can send it to the server when we create the trip
-                          onClientUploadComplete={(res) => {
-                            if (res && res[0].ufsUrl) {
-                              setImageUrl(res[0].ufsUrl);
-                            }
-                          }}
-                          onUploadError={(error: Error) => {
-                            console.log("Upload error: ", error);
-                          }}
-                        />
-                      </div> */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Trip Image
+              </label>
+              {formData.imageUrl && (
+                <Image
+                  src={formData.imageUrl}
+                  alt="Image Preview"
+                  className="w-full mb-4 rounded-md max-h-48 object-cover"
+                  width={300}
+                  height={100}
+                />
+              )}
+              <UploadButton
+                endpoint="imageUploader"
+                onClientUploadComplete={(res) => {
+                  if (res && res[0].ufsUrl) {
+                    setFormData({ ...formData, imageUrl: res[0].ufsUrl });
+                  }
+                }}
+                onUploadError={(error: Error) => {
+                  console.log("Upload error: ", error);
+                }}
+              />
+            </div>
             <Button type="submit" className="w-full" disabled={isPending}>
               {isPending ? (
                 <>
